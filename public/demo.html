@@ -1,0 +1,244 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+  <title>Canvas RTCPeerConnection Demo</title>
+  <style>
+    #video-container {
+      padding: 15px;
+      -moz-column-count: 2;
+    }
+    #canvas {
+      height:500px;
+    }
+    #video {
+      height:500px;
+    }
+    #mycanvas1 {
+    }
+    #pc2video {
+      height:auto;
+      width:100%;
+      max-height:480px;
+    }
+    #thebutton {
+    }
+
+    .hidden 
+    {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<center>
+<a href="index.html">Main webrtc demo page</a><br>
+<h2>Canvas PeerConnection Demo</h2>
+<b>NOTE: You need Firefox 41, and set canvas.capturestream.enabled to true in about:config!</b><br>
+</center>
+<div id="startstopbutton">
+  <button id="thebutton" onclick="xstart();">Start!</button>
+</div>
+<div id="video-container">
+  <div id="canvas">
+    <h3>Canvas</h3>
+    <canvas id="mycanvas1" width="640" height="480"></canvas>
+  </div>
+  <div id="video">
+    <h3>Remote Video</h3>
+    <video id="pc2video" controls="controls" muted autoplay></video>
+  </div>
+</div>
+<div id="log"></div>
+
+<script type="text/javascript" src="jquery.js"></script>
+
+<script type="text/javascript" src="Cloth.js"></script>
+
+<script type="application/javascript">
+  let pc2video = document.getElementById("pc2video");
+
+  let canvas0 = document.getElementById("canvas");
+  let canvas1 = document.getElementById("mycanvas1");
+
+  let thebutton = document.getElementById("thebutton");
+
+  let logarea = document.getElementById("log");
+
+  let pc1;
+  let pc2;
+
+  let pc1_offer;
+  let pc2_answer;
+
+  let offer_constraints = { offerToReceiveVideo: false,
+                            offerToReceiveAudio: false };
+  let answer_constraints = { offerToReceiveVideo: true,
+                             offerToReceiveAudio: true };
+
+  let canvas_stream;
+
+  var senders1 = [ ];
+
+  function log(msg) {
+    logarea.innerHTML = "<p>" + msg + "</p>" + logarea.innerHTML;
+  }
+
+  function failed(code) {
+    log("Failure callback: " + JSON.stringify(code));
+  }
+
+  function logReset() {
+    logarea.innerHTML = "";
+  }
+
+  // pc1.createOffer finished, call pc1.setLocal
+  function step1(offer) {
+    log("Offer:  " + sdpPrettyPrint(offer.sdp));
+    pc1_offer = offer;
+
+    pc1.setLocalDescription(offer, step2, failed);
+  }
+
+  // replace CR NL with HTML breaks
+  function sdpPrettyPrint(sdp) {
+    return sdp.replace(/[\r\n]+/g, '<br>');
+  }
+
+  // pc1.setLocal finished, call pc2.setRemote
+  function step2() {
+    pc1.onicecandidate = function(obj) {
+      if (obj.candidate) {
+        log("pc1 found ICE candidate: " + JSON.stringify(obj.candidate));
+        pc2.addIceCandidate(obj.candidate);
+      } else {
+        log("pc1 got end-of-candidates signal");
+      }
+    }
+
+    pc2.setRemoteDescription(pc1_offer, step3, failed);
+  };
+
+  // pc2.setRemote finished, call pc2.createAnswer
+  function step3() {
+    pc2.didSetRemote = true;
+    while (pc2.ice_queued.length > 0) {
+      pc2.addIceCandidate(pc2.ice_queued.shift());
+    }
+    pc2.createAnswer(step4, failed, answer_constraints);
+  }
+
+  // pc2.createAnswer finished, call pc2.setLocal
+  function step4(answer) {
+    log("Answer:  " + sdpPrettyPrint(answer.sdp));
+    pc2_answer = answer;
+
+    pc2.setLocalDescription(answer, step5, failed);
+  }
+
+  // pc2.setLocal finished, call pc1.setRemote
+  function step5() {
+    pc2.onicecandidate = function(obj) {
+      if (obj.candidate) {
+        log("pc2 found ICE candidate: " + JSON.stringify(obj.candidate));
+        pc1.addIceCandidate(obj.candidate);
+      } else {
+        log("pc2 got end-of-candidates signal");
+      }
+    }
+
+    pc1.setRemoteDescription(pc2_answer, step6, failed);
+  }
+
+  // pc1.setRemote finished, media should be running!
+  function step6() {
+    pc1.didSetRemote = true;
+    while (pc1.ice_queued.length > 0) {
+      pc1.addIceCandidate(pc1.ice_queued.shift());
+    }
+    log("Offer/Answer finished");
+  }
+
+  function xstart() {
+    thebutton.innerHTML = "Stop!";
+    thebutton.onclick = stop;
+
+    pc1 = new mozRTCPeerConnection();
+    pc2 = new mozRTCPeerConnection();
+    pc1.didSetRemote = false;
+    pc2.didSetRemote = false;
+    pc1.ice_queued = [];
+    pc2.ice_queued = [];
+
+    pc2.onicecandidate = function(obj) {
+      if (obj.candidate) {
+        log("pc2 found ICE candidate: " + JSON.stringify(obj.candidate));
+        if (pc1.didSetRemote) {
+          pc1.addIceCandidate(obj.candidate);
+        } else {
+          pc1.ice_queued.push(obj.candidate);
+        }
+      } else {
+        log("pc2 got end-of-candidates signal");
+      }
+    }
+
+    pc1.onicecandidate = function(obj) {
+      if (obj.candidate) {
+        log("pc1 found ICE candidate: " + JSON.stringify(obj.candidate));
+        if (pc2.didSetRemote) {
+          pc2.addIceCandidate(obj.candidate);
+        } else {
+          pc2.ice_queued.push(obj.candidate);
+        }
+      } else {
+        log("pc1 got end-of-candidates signal");
+      }
+    }
+
+    pc2.onaddstream = function(obj) {
+      log("pc2 got remote stream from pc1 " + obj.type);
+      pc2video.mozSrcObject = obj.stream;
+    }
+
+    if (!canvas1.captureStream) {
+      canvas0.innerHTML = canvas0.innerHTML + "<p></p><h2>Missing canvas.captureStream() support</h2>";
+      return;
+    }
+
+    $('#mycanvas1').show();
+    start_cloth(canvas1);
+    canvas_stream = canvas1.captureStream(15);
+
+    canvas_stream.getTracks().forEach(function(track) {
+       senders1[track.kind] = pc1.addTrack(track, canvas_stream);
+    });
+
+
+    pc1.createOffer(step1, failed, offer_constraints);
+
+  }
+
+  function stop() {
+    $('#mycanvas1').hide();
+    pc2video.pause();
+    pc2video.mozSrcObject = null;
+    canvas_stream.getTracks().forEach(function(track) {
+      track.stop();
+    });
+    canvas_stream = null;
+    pc1.close();
+    pc2.close();
+    pc1 = null;
+    pc2 = null;
+
+    senders1 = [];
+
+    thebutton.innerHTML = "Start!";
+    thebutton.onclick = xstart;
+
+    logReset();
+  }
+</script>
+
+
+</body></html>
