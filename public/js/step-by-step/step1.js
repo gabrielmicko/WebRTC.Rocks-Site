@@ -9,7 +9,7 @@ export default function() {
         var localVideo = getLocalVideo();
 
         localVideo.srcObject = mediaStream;
-        webrtcLocal.addStream(mediaStream);
+        window.localStream = mediaStream;
         log("1", "OK");
       } catch (e) {
         console.log(e);
@@ -18,7 +18,7 @@ export default function() {
     }
     var mediaPromise = navigator.mediaDevices.getUserMedia({
       video: true,
-      audio: false
+      audio: true
     });
     mediaPromise.then(successCallback, function() {
       log("1", "The getUserMedia promise was rejected.");

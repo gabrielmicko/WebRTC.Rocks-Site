@@ -17,13 +17,13 @@ import Debug from "./debug";
 
 export default class WebRTC extends EventEmitter {
   //options.type view | publish
-  //options.config.iceServers
-  //options.config.iceTransportPolicy
-  //options.config.bundlePolicy
-  //options.config.rtcpMuxPolicy
-  //options.config.peerIdentity
-  //options.config.certificates
-  //options.config.iceCandidatePoolSize
+  //options.rtcConfig.iceServers
+  //options.rtcConfig.iceTransportPolicy
+  //options.rtcConfig.bundlePolicy
+  //options.rtcConfig.rtcpMuxPolicy
+  //options.rtcConfig.peerIdentity
+  //options.rtcConfig.certificates
+  //options.rtcConfig.iceCandidatePoolSize
   //options.offer.iceRestart
 
   constructor(options = {}) {
@@ -32,7 +32,7 @@ export default class WebRTC extends EventEmitter {
     this.options.type = this.options.type || "view";
     this.mediaStream = new MediaStream();
     this.pendingCandidatesQueue = [];
-    this.debug = new Debug("WebRTC");
+    this.debug = new Debug("WebRTC", this.options.debugTag);
     this._start();
   }
 
@@ -163,12 +163,13 @@ export default class WebRTC extends EventEmitter {
           this.debug.log("ICE candidate added.", rtcCandidate);
           resolve();
         },
-        () => {
+        error => {
           this.debug.error("ICE candidate could not be added.", rtcCandidate);
           reject();
         }
       );
     });
+    r;
   }
 
   addStream(stream) {

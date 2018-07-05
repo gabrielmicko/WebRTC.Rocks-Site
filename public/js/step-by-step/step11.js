@@ -8,7 +8,6 @@ export default function() {
       log("21", "Creating a sesson description from the offer SDP");
       sdp = JSON.parse(sdp);
       window.remoteSDP = sdp;
-      //yourRemoteSDP = new RTCSessionDescription(sdp);
     }
 
     log("21", "Creating a sesson description from the offer SDP");

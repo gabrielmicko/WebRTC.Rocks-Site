@@ -1,14 +1,14 @@
-import { webrtcRemote } from "../webrtc-instance";
+import { webrtcRemote, webrtcLocal } from "../webrtc-instance";
 import log from "./log";
 
 export default function() {
   try {
     log("17", "AnswerConstraints initiated.");
 
-    //Not tested
     webrtcRemote.createAnswer().then(
       function(answer) {
         log("18", "Answer created. Copy of Session Description appended.");
+        webrtcLocal.processAnswer(answer);
         $(".yoursdp").html("");
         $(".yoursdp").append(JSON.stringify(answer));
       },

@@ -1,8 +1,8 @@
 import Cookies from "js-cookie";
 
 export default class Debug {
-  constructor(tag) {
-    this.tag = tag;
+  constructor(tag, tag2) {
+    this.tag = tag + tag2;
     this.cookieKey = "webrtcDebug";
   }
 

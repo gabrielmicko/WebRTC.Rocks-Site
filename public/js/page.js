@@ -6,8 +6,8 @@ var DefaultRoute = ReactRouter.DefaultRoute;
 var RouteHandler = ReactRouter.RouteHandler;
 var Link = ReactRouter.Link;
 var render = ReactDOM.render;
-var { initStepByStep } = require("./step-by-step");
 
+import { initStepByStep } from "./step-by-step";
 const Menu = React.createClass({
   render() {
     let activePage = this.props.activePage;
@@ -266,12 +266,24 @@ const LessonStepByStep = React.createClass({
           <div className="video grid-container">
             <div className="grid-40">
               <h3>My video</h3>
-              <video autoPlay="true" className="myvideo" playsInline={true} />
+              <video
+                autoPlay={true}
+                controls={true}
+                className="myvideo"
+                playsInline={true}
+                muted={true}
+              />
             </div>
             <div className="grid-20">&nbsp;</div>
             <div className="grid-40">
               <h3>My remote video</h3>
-              <video autoPlay="true" className="yourvideo" playsInline={true} />
+              <video
+                autoPlay={true}
+                controls={true}
+                className="yourvideo"
+                playsInline={true}
+                muted={true}
+              />
             </div>
           </div>
           <div className="tutorial">
@@ -292,9 +304,7 @@ const LessonStepByStep = React.createClass({
                     "mediaPromise = navigator.mediaDevices.getUserMedia({video: true, audio:true});"
                   }
                   {"mediaPromise.then(function(mediaStream){"}
-                  {
-                    "myVideoElement.src = window.URL.createObjectURL(mediaStream);"
-                  }
+                  {"myVideoElement.srcObject = mediaStream;"}
                 </code>
                 <div className="log" data-log="1" />
               </div>
@@ -323,29 +333,14 @@ const LessonStepByStep = React.createClass({
                 </div>
                 <code>
                   {
-                    'config = {urls: "stun:23.21.150.121"},{urls: "stun:stun.l.google.com:19302"}]'
+                    'const rtcOptions = {iceServers: [{urls: "stun:23.21.150.121"},{urls: "stun:stun.l.google.com:19302"}]}'
                   }
                 </code>
                 <div className="log" data-log="2" />
-                <div className="hr" />
-                <div className="description">
-                  Defining the PeerConnection contraints
-                </div>
-                <code>
-                  {
-                    "constraints = {mandatory:{offerToReceiveAudio: true,offerToReceiveVideo: true}}"
-                  }
-                </code>
-                <div className="log" data-log="3" />
-                <div className="hr" />
                 <div className="description">
                   Creating PeerConnection instance
                 </div>
-                <code>
-                  {
-                    "const pc = new RTCPeerConnection({iceServers:config}, constraints)"
-                  }
-                </code>
+                <code>{"const pc = new RTCPeerConnection(rtcOptions)"}</code>
                 <div className="log" data-log="4" />
 
                 <div className="hr" />
@@ -362,11 +357,9 @@ const LessonStepByStep = React.createClass({
                   Set the Remote Stream listener
                 </div>
                 <code>
-                  {"pc.onaddstream = function(event) {"}
+                  {"pc.onTrack = function(event) {"}
                   <br />
-                  {
-                    "remoteVideoElement.src = window.URL.createObjectURL(event);"
-                  }
+                  {"remoteVideoElement.srcObject = event.streams[0]"}
                 </code>
                 <div className="log" data-log="6" />
               </div>
@@ -405,7 +398,7 @@ const LessonStepByStep = React.createClass({
                 <div className="description">Setting up offer contraints</div>
                 <code>
                   {
-                    "constraints = {mandatory:{offerToReceiveAudio: true,offerToReceiveVideo: true}}"
+                    "constraints = {offerToReceiveAudio: true, offerToReceiveVideo: true}"
                   }
                 </code>
                 <div className="log" data-log="8" />
@@ -414,9 +407,7 @@ const LessonStepByStep = React.createClass({
 
                 <div className="description">Create my offer</div>
                 <code>
-                  {
-                    "pc.createOffer(function(sdp){(...)}, function(...), constraints){}"
-                  }
+                  {"pc.createOffer(constraints).then(successFn, failureFn)"}
                 </code>
                 <div className="log" data-log="9" />
 
@@ -424,7 +415,7 @@ const LessonStepByStep = React.createClass({
 
                 <div className="description">Setting local description</div>
                 <code>
-                  {"pc.setLocalDescription(sdp, successFunc, failFunc);"}
+                  {"pc.setLocalDescription(sdp, successFn, failureFn);"}
                 </code>
                 <div className="log" data-log="10" />
               </div>
@@ -484,7 +475,7 @@ const LessonStepByStep = React.createClass({
                 </div>
                 <code>
                   {
-                    "pc.setRemoteDescription(remoteSessionDescription, successFunc, failFunc)"
+                    "pc.setRemoteDescription(remoteSessionDescription).then(successFn, failureFn)"
                   }
                 </code>
                 <div className="log" data-log="13" />
@@ -528,7 +519,11 @@ const LessonStepByStep = React.createClass({
                 <div className="log" data-log="15" />
                 <div className="hr" />
                 <div className="description">Add candidates</div>
-                <code>{"pc.addIceCandidate(iceCandidate, function(..."}</code>
+                <code>
+                  {
+                    "pc.addIceCandidate(iceCandidate).then(successFn, failureFn)"
+                  }
+                </code>
                 <div className="log" data-log="16" />
               </div>
             </div>
@@ -547,18 +542,8 @@ const LessonStepByStep = React.createClass({
                 </button>
               </div>
               <div className="grid-40 result">
-                <div className="description">Setting answer constraints</div>
-                <code>
-                  {
-                    "constraints = {mandatory:{offerToReceiveAudio: true,offerToReceiveVideo: true}}"
-                  }
-                </code>
-                <div className="log" data-log="17" />
-
-                <div className="hr" />
-
                 <div className="description">Creating answer for the offer</div>
-                <code>{"pc.createAnswer(function(...))"}</code>
+                <code>{"pc.createAnswer().then(successFn, failureFn)"}</code>
                 <div className="log" data-log="18" />
               </div>
             </div>
@@ -577,7 +562,9 @@ const LessonStepByStep = React.createClass({
                   Setting answer as your local description
                 </div>
                 <code>
-                  {"pc.setLocalDescription(anwerSDP, successFunc, failFunc"}
+                  {
+                    "pc.setLocalDescription(anwerSDP).then(successFn, failureFn)"
+                  }
                 </code>
                 <div className="log" data-log="19" />
               </div>
@@ -639,7 +626,7 @@ const LessonStepByStep = React.createClass({
                 </div>
                 <code>
                   {
-                    "pc.setRemoteDescription(remoteSessionDescription, successFunc, failFunc"
+                    "pc.setRemoteDescription(remoteSessionDescription).then(successFn, failureFn)"
                   }
                 </code>
                 <div className="log" data-log="22" />
@@ -687,3 +674,5 @@ let routes = (
 );
 
 render(routes, document.querySelector("#app"));
+
+export default {};

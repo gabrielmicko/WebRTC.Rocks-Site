@@ -7,29 +7,29 @@ export default function() {
     log("2", "OK");
     log("3", "OK");
 
-    var countLocalCands = 0;
+    var localCandidates = [];
     webrtcLocal.on("candidate", function(candidate) {
-      if (countLocalCands === 0) {
-        $(".mycandidate").html("");
-      }
-      countLocalCands++;
-      log("5", "Candidates " + countLocalCands);
-      $(".mycandidate").append(JSON.stringify(candidate));
+      localCandidates.push(candidate);
+      $(".mycandidate").html("");
+      log("5", "Candidates " + localCandidates.length);
+      $(".mycandidate").append(JSON.stringify(localCandidates));
     });
 
-    var countRemoteCands = 0;
+    var remoteCandidates = [];
     webrtcRemote.on("candidate", function(candidate) {
-      if (countRemoteCands === 0) {
-        $(".yourcandidate").html("");
-      }
-      $(".yourcandidate").append(JSON.stringify(candidate));
+      remoteCandidates.push(candidate);
+      $(".yourcandidate").html("");
+      $(".yourcandidate").append(JSON.stringify(remoteCandidates));
     });
 
     log("4", "OK - RTCPeerConnection created.<br>");
 
     webrtcRemote.on("stream", function(mediaStream) {
-      getRemoteVideo().srcObject = mediaStream;
-      $(".yourcandidate").append(JSON.stringify(candidate));
+      try {
+        getRemoteVideo().srcObject = mediaStream;
+      } catch (e) {
+        console.log(e);
+      }
     });
 
     log("6", "Stream listener has been initiated!");

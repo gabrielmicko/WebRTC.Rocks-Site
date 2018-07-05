@@ -1,20 +1,24 @@
 import log from "./log";
+
+import { webrtcLocal, webrtcRemote } from "../webrtc-instance";
+import { getLocalVideo, getRemoteVideo } from "./html";
 export default function() {
   try {
-    myPC.onclose = function() {
+    webrtcLocal.pc.onclose = function() {
       log("23", "Local connection closed.");
     };
 
-    yourPC.onclose = function() {
+    webrtcRemote.pc.onclose = function() {
       log("24", "Remote conenction closed.");
     };
 
-    myPC.close();
-    yourPC.close();
+    webrtcLocal.pc.close();
+    webrtcRemote.pc.close();
 
     log("23", "Connection closed.");
     log("24", "Stream stopped.");
-    myStream.stop();
+    getLocalVideo().pause();
+    getRemoteVideo().pause();
   } catch (e) {
     console.log(e);
     log("24", e.message);

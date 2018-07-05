@@ -25,32 +25,27 @@ import step10 from "./step-by-step/step10";
 import step11 from "./step-by-step/step11";
 import step12 from "./step-by-step/step12";
 import step13 from "./step-by-step/step13";
-//import step14 from "./step-by-step/step14";
-//Doesnt exist
 import step15 from "./step-by-step/step15";
-import step16 from "./step-by-step/step16";
 import step17 from "./step-by-step/step17";
 import { webrtcLocal, webrtcRemote } from "./webrtc-instance";
 
-const steps = [
-  step1,
-  step2,
-  step3,
-  step4,
-  step5,
-  step6,
-  step7,
-  step8,
-  step9,
-  step10,
-  step11,
-  step12,
-  step13,
-  step14,
-  step15,
-  step16,
-  step17
-];
+const steps = {
+  1: step1,
+  2: step2,
+  3: step3,
+  4: step4,
+  5: step5,
+  6: step6,
+  7: step7,
+  8: step8,
+  9: step9,
+  10: step10,
+  11: step11,
+  12: step12,
+  13: step13,
+  15: step15,
+  17: step17
+};
 
 function initStepByStep() {
   $("main .tutorial .step .part").on("click", function() {
@@ -67,8 +62,7 @@ function initStepByStep() {
   });
 
   function fire(step) {
-    console.log(step);
-    steps[step - 1]();
+    steps[step]();
     // eval("step" + step + "(" + step + ")");
   }
 }
